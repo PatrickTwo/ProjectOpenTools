@@ -1,0 +1,259 @@
+<Window x:Class="ProjectOpenTools.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="项目启动器"
+        Icon="/Assets/AppIcon.ico"
+        Width="1240"
+        Height="760"
+        MinWidth="1024"
+        MinHeight="680"
+        Background="{StaticResource WindowBackgroundBrush}"
+        FontFamily="Microsoft YaHei UI">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="18" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360" />
+                <ColumnDefinition Width="18" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                    Padding="22"
+                    Background="{StaticResource PanelBackgroundBrush}"
+                    BorderBrush="{StaticResource PanelBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="14" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock FontFamily="Consolas"
+                                   FontSize="28"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource StrongTextBrush}"
+                                   Text="项目启动器" />
+                        <TextBlock Margin="0,6,0,0"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   Text="左侧保留最近项目，右侧切换不同打开方式。" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="3">
+                        <Button x:Name="SelectProjectButton"
+                                Click="SelectProjectButton_Click"
+                                Content="选择项目文件夹"
+                                Style="{StaticResource PrimaryButtonStyle}" />
+                        <Button x:Name="ManageAppsButton"
+                                Margin="0,12,0,0"
+                                Click="ManageAppsButton_Click"
+                                Content="配置打开方式"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="5">
+                        <ListBox x:Name="RecentProjectsListBox"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 ItemsSource="{Binding RecentProjects}"
+                                 SelectionChanged="RecentProjectsListBox_SelectionChanged"
+                                 ItemContainerStyle="{StaticResource CardListBoxItemStyle}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource StrongTextBrush}"
+                                                   Text="{Binding DisplayName}" />
+                                        <TextBlock Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{StaticResource MutedTextBrush}"
+                                                   Text="{Binding Path}" />
+                                        <TextBlock Margin="0,8,0,0"
+                                                   Foreground="{StaticResource PrimaryBrush}"
+                                                   Text="{Binding LastOpenedAt, StringFormat=最近使用：{0:yyyy-MM-dd HH:mm:ss}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Border x:Name="EmptyProjectsHintBorder"
+                                Padding="22"
+                                Background="#F9FDFC"
+                                BorderBrush="#DCEFEB"
+                                BorderThickness="1"
+                                CornerRadius="14"
+                                Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource StrongTextBrush}"
+                                           Text="还没有最近项目" />
+                                <TextBlock Margin="0,8,0,0"
+                                           Foreground="{StaticResource MutedTextBrush}"
+                                           Text="点击上方“选择项目文件夹”后，这里会自动记录你的最近项目。" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Padding="22"
+                    Background="{StaticResource PanelBackgroundBrush}"
+                    BorderBrush="{StaticResource PanelBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="18" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock FontSize="24"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource StrongTextBrush}"
+                                   Text="打开方式" />
+                        <TextBlock Margin="0,6,0,0"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   Text="配置多个应用后，就可以针对同一个项目快速切换打开方式。" />
+                    </StackPanel>
+
+                    <Border Grid.Row="2"
+                            Padding="16"
+                            Background="{StaticResource SurfaceBrush}"
+                            CornerRadius="14">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold"
+                                       Foreground="{StaticResource StrongTextBrush}"
+                                       Text="当前项目" />
+                            <TextBlock x:Name="CurrentProjectPathTextBlock"
+                                       Margin="0,8,0,0"
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       Text="尚未选择项目文件夹" />
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="LauncherAppsItemsControl"
+                                          ItemsSource="{Binding LauncherApps}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Width="220"
+                                                Height="148"
+                                                Margin="0,0,16,16"
+                                                Click="LauncherAppButton_Click"
+                                                Cursor="Hand"
+                                                Tag="{Binding}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="AppCard"
+                                                            Padding="18"
+                                                            Background="#F9FDFC"
+                                                            BorderBrush="#DCEFEB"
+                                                            BorderThickness="1"
+                                                            CornerRadius="16">
+                                                        <StackPanel VerticalAlignment="Center">
+                                                            <Border Width="42"
+                                                                    Height="42"
+                                                                    Background="{StaticResource SurfaceBrush}"
+                                                                    CornerRadius="8">
+                                                                <Grid>
+                                                                    <Image Width="24"
+                                                                           Height="24"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           Source="{Binding IconImage}" />
+                                                                    <TextBlock HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center"
+                                                                               FontFamily="Consolas"
+                                                                               FontSize="18"
+                                                                               FontWeight="Bold"
+                                                                               Foreground="{StaticResource PrimaryBrush}"
+                                                                               Text="{Binding Name}"
+                                                                               Visibility="Collapsed" />
+                                                                </Grid>
+                                                            </Border>
+                                                            <TextBlock Margin="0,14,0,0"
+                                                                       FontSize="18"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{StaticResource StrongTextBrush}"
+                                                                       Text="{Binding Name}" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="AppCard" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                                                            <Setter TargetName="AppCard" Property="Background" Value="#F1FBF8" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsPressed" Value="True">
+                                                            <Setter TargetName="AppCard" Property="Background" Value="#E7F5F2" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <Border x:Name="EmptyAppsHintBorder"
+                                Padding="22"
+                                Background="#F9FDFC"
+                                BorderBrush="#DCEFEB"
+                                BorderThickness="1"
+                                CornerRadius="14"
+                                Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource StrongTextBrush}"
+                                           Text="还没有可用应用" />
+                                <TextBlock Margin="0,8,0,0"
+                                           Foreground="{StaticResource MutedTextBrush}"
+                                           Text="点击上方“配置应用”，添加 VS Code、Trae 或其他编辑器的 exe 路径。" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Padding="16"
+                Background="{StaticResource PanelBackgroundBrush}"
+                BorderBrush="{StaticResource PanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16">
+            <TextBlock x:Name="StatusTextBlock"
+                       Foreground="{StaticResource StrongTextBrush}"
+                       Text="准备就绪。" />
+        </Border>
+    </Grid>
+</Window>

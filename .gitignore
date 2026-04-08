@@ -1,0 +1,21 @@
+# Build outputs
+bin/
+obj/
+tests/ProjectOpenTools.Tests/bin/
+tests/ProjectOpenTools.Tests/obj/
+
+# Root runtime artifacts
+/dist/项目启动器.exe
+/dist/项目启动器.dll
+/dist/项目启动器.deps.json
+/dist/项目启动器.runtimeconfig.json
+
+# IDE files
+*.user
+*.suo
+*.cache
+
+# Icon debug artifacts
+src/ProjectOpenTools/Assets/ExtractedExeIcon.bmp
+src/ProjectOpenTools/Assets/ExtractedExeIcon.png
+src/ProjectOpenTools/Assets/Test32.png
