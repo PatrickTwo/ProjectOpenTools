@@ -1,0 +1,89 @@
+<Window x:Class="ProjectOpenTools.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="偏好设置"
+        Icon="/Assets/AppIcon.ico"
+        Width="560"
+        Height="380"
+        MinWidth="520"
+        MinHeight="340"
+        Background="{StaticResource WindowBackgroundBrush}"
+        FontFamily="Microsoft YaHei UI"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="18" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock FontSize="24"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource StrongTextBrush}"
+                           Text="偏好设置" />
+                <TextBlock Margin="0,8,0,0"
+                           Foreground="{StaticResource MutedTextBrush}"
+                           Text="调整项目启动器在打开项目后以及点击关闭按钮时的行为。" />
+
+                <Border Margin="0,20,0,0"
+                        Padding="18"
+                        Background="{StaticResource PanelBackgroundBrush}"
+                        BorderBrush="{StaticResource PanelBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16">
+                    <StackPanel>
+                        <TextBlock FontSize="17"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource StrongTextBrush}"
+                                   Text="项目打开后的行为" />
+                        <CheckBox x:Name="AutoHideToTrayAfterLaunchCheckBox"
+                                  Margin="0,14,0,0"
+                                  Content="通过某个应用打开项目后，自动将启动器隐藏到系统托盘" />
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="0,16,0,0"
+                        Padding="18"
+                        Background="{StaticResource PanelBackgroundBrush}"
+                        BorderBrush="{StaticResource PanelBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16">
+                    <StackPanel>
+                        <TextBlock FontSize="17"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource StrongTextBrush}"
+                                   Text="点击关闭按钮时" />
+                        <RadioButton x:Name="HideToTrayRadioButton"
+                                     Margin="0,14,0,0"
+                                     Content="隐藏到系统托盘" />
+                        <TextBlock Margin="24,4,0,0"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   Text="适合将启动器作为常驻工具使用。" />
+                        <RadioButton x:Name="ExitApplicationRadioButton"
+                                     Margin="0,14,0,0"
+                                     Content="直接退出程序" />
+                        <TextBlock Margin="24,4,0,0"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   Text="关闭窗口后完全退出，不再驻留托盘。" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Width="96"
+                    Margin="0,0,12,0"
+                    Click="CancelButton_Click"
+                    Content="取消"
+                    Style="{StaticResource SecondaryButtonStyle}" />
+            <Button Width="120"
+                    Click="SaveButton_Click"
+                    Content="保存设置"
+                    Style="{StaticResource PrimaryButtonStyle}" />
+        </StackPanel>
+    </Grid>
+</Window>

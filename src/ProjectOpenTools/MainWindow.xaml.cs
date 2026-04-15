@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -45,6 +46,21 @@ public partial class MainWindow : Window
     /// </summary>
     private string? currentProjectPath;
 
+    /// <summary>
+    /// 系统托盘图标，用于隐藏后继续驻留。
+    /// </summary>
+    private readonly System.Windows.Forms.NotifyIcon notifyIcon;
+
+    /// <summary>
+    /// 标记当前是否由托盘菜单主动触发退出。
+    /// </summary>
+    private bool isExitRequested;
+
+    /// <summary>
+    /// 标记是否已提示过“最小化到托盘”的引导信息。
+    /// </summary>
+    private bool hasShownTrayHint;
+
     #region 初始化与数据加载
 
     /// <summary>
@@ -60,10 +76,12 @@ public partial class MainWindow : Window
         this.launcherService = new LauncherService();
         this.appIconService = new AppIconService();
         this.appSettings = new AppSettings();
+        this.notifyIcon = CreateNotifyIcon();
 
         DataContext = this;
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
+        Closed += MainWindow_Closed;
     }
 
     /// <summary>
@@ -89,7 +107,25 @@ public partial class MainWindow : Window
     /// </summary>
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        // 根据用户偏好决定点击关闭按钮时是隐藏到托盘还是直接退出。
+        if (!this.isExitRequested && this.appSettings.CloseAction == CloseActionOption.HideToTray)
+        {
+            e.Cancel = true;
+            HideToTray();
+            return;
+        }
+
         SaveSettings();
+    }
+
+    /// <summary>
+    /// 窗口真正关闭后释放托盘资源。
+    /// </summary>
+    private void MainWindow_Closed(object? sender, EventArgs e)
+    {
+        // 释放系统托盘对象，避免程序退出后仍残留空白图标。
+        this.notifyIcon.Visible = false;
+        this.notifyIcon.Dispose();
     }
 
     /// <summary>
@@ -157,6 +193,120 @@ public partial class MainWindow : Window
     private void SaveSettings()
     {
         this.settingsStorageService.SaveSettings(this.appSettings);
+    }
+
+    #endregion
+
+    #region 托盘驻留与窗口恢复
+
+    /// <summary>
+    /// 创建系统托盘图标与快捷菜单。
+    /// </summary>
+    /// <returns>配置完成的托盘图标实例。</returns>
+    private System.Windows.Forms.NotifyIcon CreateNotifyIcon()
+    {
+        System.Windows.Forms.NotifyIcon trayNotifyIcon = new System.Windows.Forms.NotifyIcon();
+        System.Windows.Forms.ContextMenuStrip contextMenuStrip = new System.Windows.Forms.ContextMenuStrip();
+        System.Windows.Forms.ToolStripMenuItem showMainWindowMenuItem = new System.Windows.Forms.ToolStripMenuItem("显示主窗口");
+        System.Windows.Forms.ToolStripMenuItem exitApplicationMenuItem = new System.Windows.Forms.ToolStripMenuItem("退出程序");
+        System.Drawing.Icon? processIcon = LoadTrayIcon();
+
+        showMainWindowMenuItem.Click += ShowMainWindowMenuItem_Click;
+        exitApplicationMenuItem.Click += ExitApplicationMenuItem_Click;
+
+        contextMenuStrip.Items.Add(showMainWindowMenuItem);
+        contextMenuStrip.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+        contextMenuStrip.Items.Add(exitApplicationMenuItem);
+
+        trayNotifyIcon.Text = "项目启动器";
+        trayNotifyIcon.Visible = true;
+        trayNotifyIcon.ContextMenuStrip = contextMenuStrip;
+        trayNotifyIcon.DoubleClick += NotifyIcon_DoubleClick;
+
+        if (processIcon != null)
+        {
+            // 托盘图标直接复用当前可执行文件图标，避免再维护第二套路径。
+            trayNotifyIcon.Icon = processIcon;
+        }
+
+        return trayNotifyIcon;
+    }
+
+    /// <summary>
+    /// 读取当前进程图标，供系统托盘使用。
+    /// </summary>
+    /// <returns>可用于托盘显示的图标对象。</returns>
+    private static System.Drawing.Icon? LoadTrayIcon()
+    {
+        string? executablePath = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath))
+        {
+            return null;
+        }
+
+        // 从当前程序文件中提取图标，确保托盘与 exe 保持一致。
+        return System.Drawing.Icon.ExtractAssociatedIcon(executablePath);
+    }
+
+    /// <summary>
+    /// 将窗口隐藏到系统托盘。
+    /// </summary>
+    private void HideToTray()
+    {
+        // 隐藏主窗口并从任务栏移除，只保留右下角托盘入口。
+        Hide();
+        ShowInTaskbar = false;
+        WindowState = WindowState.Minimized;
+        UpdateStatus("项目启动器已隐藏到系统托盘。");
+
+        if (!this.hasShownTrayHint)
+        {
+            // 首次隐藏时给出提示，帮助用户理解新的关闭行为。
+            this.notifyIcon.ShowBalloonTip(2000, "项目启动器", "程序已隐藏到右下角托盘，双击图标可恢复窗口。", System.Windows.Forms.ToolTipIcon.Info);
+            this.hasShownTrayHint = true;
+        }
+    }
+
+    /// <summary>
+    /// 从系统托盘恢复主窗口。
+    /// </summary>
+    private void RestoreFromTray()
+    {
+        // 先恢复到普通状态，再激活窗口，避免窗口被系统留在后台。
+        Show();
+        ShowInTaskbar = true;
+        WindowState = WindowState.Normal;
+        Activate();
+        Topmost = true;
+        Topmost = false;
+        Focus();
+        UpdateStatus("已从系统托盘恢复窗口。");
+    }
+
+    /// <summary>
+    /// 双击托盘图标时恢复主窗口。
+    /// </summary>
+    private void NotifyIcon_DoubleClick(object? sender, EventArgs e)
+    {
+        RestoreFromTray();
+    }
+
+    /// <summary>
+    /// 点击“显示主窗口”菜单时恢复窗口。
+    /// </summary>
+    private void ShowMainWindowMenuItem_Click(object? sender, EventArgs e)
+    {
+        RestoreFromTray();
+    }
+
+    /// <summary>
+    /// 点击“退出程序”菜单时真正关闭应用。
+    /// </summary>
+    private void ExitApplicationMenuItem_Click(object? sender, EventArgs e)
+    {
+        // 标记为真实退出后再关闭窗口，避免再次被 Closing 事件拦截。
+        this.isExitRequested = true;
+        Close();
     }
 
     #endregion
@@ -251,6 +401,27 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// 打开偏好设置窗口。
+    /// </summary>
+    private void OpenSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        SettingsWindow settingsWindow = new SettingsWindow(this.appSettings);
+        settingsWindow.Owner = this;
+
+        bool? dialogResult = settingsWindow.ShowDialog();
+        if (dialogResult != true)
+        {
+            return;
+        }
+
+        // 将窗口返回的设置直接写回当前配置并持久化。
+        this.appSettings.AutoHideToTrayAfterLaunch = settingsWindow.AutoHideToTrayAfterLaunch;
+        this.appSettings.CloseAction = settingsWindow.CloseAction;
+        SaveSettings();
+        UpdateStatus("偏好设置已保存。");
+    }
+
+    /// <summary>
     /// 使用选中的应用打开当前项目。
     /// </summary>
     private void LauncherAppButton_Click(object sender, RoutedEventArgs e)
@@ -275,6 +446,12 @@ public partial class MainWindow : Window
 
         ApplySelectedProject(this.currentProjectPath, true);
         UpdateStatus($"已用 {launcherAppEntry.Name} 打开项目：{Path.GetFileName(this.currentProjectPath)}");
+
+        if (this.appSettings.AutoHideToTrayAfterLaunch)
+        {
+            // 按用户偏好，在成功启动项目后立即隐藏主窗口。
+            HideToTray();
+        }
     }
 
     #endregion

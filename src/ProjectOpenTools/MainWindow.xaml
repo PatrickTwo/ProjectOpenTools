@@ -127,15 +127,31 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <StackPanel>
-                        <TextBlock FontSize="24"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource StrongTextBrush}"
-                                   Text="打开方式" />
-                        <TextBlock Margin="0,6,0,0"
-                                   Foreground="{StaticResource MutedTextBrush}"
-                                   Text="配置多个应用后，就可以针对同一个项目快速切换打开方式。" />
-                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock FontSize="24"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource StrongTextBrush}"
+                                       Text="打开方式" />
+                            <TextBlock Margin="0,6,0,0"
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       Text="配置多个应用后，就可以针对同一个项目快速切换打开方式。" />
+                        </StackPanel>
+
+                        <Button x:Name="OpenSettingsButton"
+                                Grid.Column="1"
+                                Width="112"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Click="OpenSettingsButton_Click"
+                                Content="设置"
+                                Style="{StaticResource ToolbarButtonStyle}" />
+                    </Grid>
 
                     <Border Grid.Row="2"
                             Padding="16"
@@ -203,6 +219,7 @@
                                                                        FontSize="18"
                                                                        FontWeight="SemiBold"
                                                                        Foreground="{StaticResource StrongTextBrush}"
+                                                                       TextAlignment="Center"
                                                                        Text="{Binding Name}" />
                                                         </StackPanel>
                                                     </Border>
