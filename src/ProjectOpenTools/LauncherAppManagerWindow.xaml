@@ -96,7 +96,7 @@
                                                Text="{Binding ExePath}" />
                                     <TextBlock Margin="0,8,0,0"
                                                Foreground="{StaticResource PrimaryBrush}"
-                                               Text="{Binding ArgumentsTemplate, StringFormat=参数模板：{0}}" />
+                                               Text="{Binding SummaryText}" />
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

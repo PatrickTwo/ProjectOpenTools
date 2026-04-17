@@ -47,9 +47,11 @@ public partial class LauncherAppManagerWindow : System.Windows.Window
         {
             EditableApps.Add(new LauncherAppEntry
             {
+                LaunchMode = launcherApp.LaunchMode,
                 Name = launcherApp.Name,
                 ExePath = launcherApp.ExePath,
                 ArgumentsTemplate = launcherApp.ArgumentsTemplate,
+                CommandText = launcherApp.CommandText,
                 IconImage = this.appIconService.LoadIcon(launcherApp.ExePath)
             });
         }
@@ -138,6 +140,7 @@ public partial class LauncherAppManagerWindow : System.Windows.Window
 
         EditableApps.Add(new LauncherAppEntry
         {
+            LaunchMode = LaunchMode.Executable,
             Name = selectedDiscoveredApp.Name,
             ExePath = selectedDiscoveredApp.ExePath,
             ArgumentsTemplate = selectedDiscoveredApp.ArgumentsTemplate,
@@ -187,9 +190,11 @@ public partial class LauncherAppManagerWindow : System.Windows.Window
         UpdatedApps = EditableApps
             .Select(item => new LauncherAppEntry
             {
+                LaunchMode = item.LaunchMode,
                 Name = item.Name,
                 ExePath = item.ExePath,
-                ArgumentsTemplate = item.ArgumentsTemplate
+                ArgumentsTemplate = item.ArgumentsTemplate,
+                CommandText = item.CommandText
             })
             .ToList();
 

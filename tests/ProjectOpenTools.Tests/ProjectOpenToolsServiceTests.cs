@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Text;
 using ProjectOpenTools.Models;
 using ProjectOpenTools.Services;
 
@@ -101,6 +103,58 @@ public sealed class ProjectOpenToolsServiceTests
         Assert.Equal("--folder-uri \"C:\\Work\\My Project\"", arguments);
     }
 
+    /// <summary>
+    /// 终端命令模式应构建 Windows Terminal 启动信息。
+    /// </summary>
+    [Fact]
+    public void BuildProcessStartInfo_ShouldCreateWindowsTerminalStartInfo_WhenLaunchModeIsTerminalCommand()
+    {
+        LauncherService launcherService = new LauncherService();
+        LauncherAppEntry launcherAppEntry = new LauncherAppEntry
+        {
+            LaunchMode = LaunchMode.TerminalCommand,
+            Name = "Codex CLI",
+            CommandText = "codex"
+        };
+
+        ProcessStartInfo processStartInfo = launcherService.BuildProcessStartInfo(launcherAppEntry, @"C:\Work\My Project");
+        string expectedEncodedCommand = Convert.ToBase64String(Encoding.Unicode.GetBytes("codex"));
+
+        Assert.Equal("wt.exe", processStartInfo.FileName);
+        Assert.Equal(@"C:\Work\My Project", processStartInfo.WorkingDirectory);
+        Assert.Contains("-d \"C:\\Work\\My Project\"", processStartInfo.Arguments, StringComparison.Ordinal);
+        Assert.Contains($"-EncodedCommand {expectedEncodedCommand}", processStartInfo.Arguments, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// 终端命令为空时应阻止启动。
+    /// </summary>
+    [Fact]
+    public void ValidateLaunch_ShouldFail_WhenTerminalCommandIsEmpty()
+    {
+        LauncherService launcherService = new LauncherService();
+        LauncherAppEntry launcherAppEntry = new LauncherAppEntry
+        {
+            LaunchMode = LaunchMode.TerminalCommand,
+            Name = "Codex CLI",
+            CommandText = string.Empty
+        };
+
+        string tempDirectory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))).FullName;
+
+        try
+        {
+            LaunchResult launchResult = launcherService.ValidateLaunch(launcherAppEntry, tempDirectory);
+
+            Assert.False(launchResult.IsSuccess);
+            Assert.Equal("请先填写终端命令，再执行打开操作。", launchResult.Message);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, true);
+        }
+    }
+
     #endregion
 
     #region 配置持久化
@@ -133,6 +187,12 @@ public sealed class ProjectOpenToolsServiceTests
                     Name = "VS Code",
                     ExePath = @"C:\Tools\Code.exe",
                     ArgumentsTemplate = "{projectPath}"
+                },
+                new LauncherAppEntry
+                {
+                    LaunchMode = LaunchMode.TerminalCommand,
+                    Name = "Codex CLI",
+                    CommandText = "codex"
                 }
             }
         };
@@ -143,9 +203,11 @@ public sealed class ProjectOpenToolsServiceTests
             AppSettings loadedSettings = settingsStorageService.LoadSettings();
 
             Assert.Single(loadedSettings.RecentProjects);
-            Assert.Single(loadedSettings.LauncherApps);
+            Assert.Equal(2, loadedSettings.LauncherApps.Count);
             Assert.Equal("Alpha", loadedSettings.RecentProjects[0].DisplayName);
             Assert.Equal("VS Code", loadedSettings.LauncherApps[0].Name);
+            Assert.Equal(LaunchMode.TerminalCommand, loadedSettings.LauncherApps[1].LaunchMode);
+            Assert.Equal("codex", loadedSettings.LauncherApps[1].CommandText);
         }
         finally
         {
