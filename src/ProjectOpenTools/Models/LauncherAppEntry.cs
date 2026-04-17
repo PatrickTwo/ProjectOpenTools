@@ -28,4 +28,14 @@ public sealed class LauncherAppEntry
     /// </summary>
     [JsonIgnore]
     public ImageSource? IconImage { get; set; }
+
+    /// <summary>
+    /// 启动模式：Executable（默认）或 TerminalCommand
+    /// </summary>
+    public string LaunchMode { get; set; } = "Executable";
+
+    /// <summary>
+    /// 终端命令内容，仅 LaunchMode=TerminalCommand 时使用。
+    /// </summary>
+    public string CommandText { get; set; } = string.Empty;
 }
